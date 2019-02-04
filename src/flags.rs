@@ -106,6 +106,7 @@ fn set_recognized_flags(
           flags.allow_run = true;
         }
         if matches.opt_present("allow-all") {
+          flags.allow_read = true;
           flags.allow_env = true;
           flags.allow_net = true;
           flags.allow_run = true;
@@ -270,6 +271,20 @@ fn test_set_flags_7() {
       allow_run: true,
       allow_read: true,
       allow_write: true,
+      ..DenoFlags::default()
+    }
+  )
+}
+
+#[test]
+fn test_set_flags_8() {
+  let (flags, rest, _) =
+    set_flags(svec!["deno", "gist.ts", "--allow-read"]).unwrap();
+  assert_eq!(rest, svec!["deno", "gist.ts"]);
+  assert_eq!(
+    flags,
+    DenoFlags {
+      allow_read: true,
       ..DenoFlags::default()
     }
   )
