@@ -55,7 +55,7 @@ export function testPerm(perms: DenoPermissions, fn: testing.TestFunction) {
 }
 
 export function test(fn: testing.TestFunction) {
-  testPerm({ write: false, net: false, env: false }, fn);
+  testPerm({ read: false, write: false, net: false, env: false }, fn);
 }
 
 test(function permSerialization() {
@@ -63,8 +63,10 @@ test(function permSerialization() {
     for (const net of [true, false]) {
       for (const env of [true, false]) {
         for (const run of [true, false]) {
-          const perms: DenoPermissions = { write, net, env, run };
-          testing.assertEqual(perms, permFromString(permToString(perms)));
+          for (const read of [true, false]) {
+            const perms: DenoPermissions = { write, net, env, run, read };
+            testing.assertEqual(perms, permFromString(permToString(perms)));
+          }
         }
       }
     }
