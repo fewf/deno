@@ -680,6 +680,10 @@ fn op_open(
     }
   }
 
+  if let Err(e) = state.check_read(&filename_str) {
+    return odd_future(e);
+  }
+
   if mode != "r" {
     // Write permission is needed except "r" mode
     if let Err(e) = state.check_write(&filename_str) {
@@ -857,15 +861,19 @@ fn op_remove(
 
 // Prototype https://github.com/denoland/deno/blob/golang/os.go#L171-L184
 fn op_read_file(
-  _state: &Arc<IsolateState>,
+  state: &Arc<IsolateState>,
   base: &msg::Base<'_>,
   data: libdeno::deno_buf,
 ) -> Box<Op> {
   assert_eq!(data.len(), 0);
   let inner = base.inner_as_read_file().unwrap();
   let cmd_id = base.cmd_id();
-  let filename = PathBuf::from(inner.filename().unwrap());
+  let filename_ = inner.filename().unwrap();
+  let filename = PathBuf::from(filename_);
   debug!("op_read_file {}", filename.display());
+  if let Err(e) = state.check_read(&filename_) {
+    return odd_future(e);
+  }
   blocking(base.sync(), move || {
     let vec = fs::read(&filename)?;
     // Build the response message. memcpy data into inner.
@@ -897,10 +905,14 @@ fn op_copy_file(
 ) -> Box<Op> {
   assert_eq!(data.len(), 0);
   let inner = base.inner_as_copy_file().unwrap();
-  let from = PathBuf::from(inner.from().unwrap());
+  let from_ = inner.from().unwrap();
+  let from = PathBuf::from(from_);
   let to_ = inner.to().unwrap();
   let to = PathBuf::from(to_);
 
+  if let Err(e) = state.check_read(&from_) {
+    return odd_future(e);
+  }
   if let Err(e) = state.check_write(&to_) {
     return odd_future(e);
   }
@@ -969,15 +981,20 @@ fn op_cwd(
 }
 
 fn op_stat(
-  _state: &Arc<IsolateState>,
+  state: &Arc<IsolateState>,
   base: &msg::Base<'_>,
   data: libdeno::deno_buf,
 ) -> Box<Op> {
   assert_eq!(data.len(), 0);
   let inner = base.inner_as_stat().unwrap();
   let cmd_id = base.cmd_id();
-  let filename = PathBuf::from(inner.filename().unwrap());
+  let filename_ = inner.filename().unwrap();
+  let filename = PathBuf::from(filename_);
   let lstat = inner.lstat();
+
+  if let Err(e) = state.check_read(&filename_) {
+    return odd_future(e);
+  }
 
   blocking(base.sync(), move || {
     let builder = &mut FlatBufferBuilder::new();
@@ -1016,7 +1033,7 @@ fn op_stat(
 }
 
 fn op_read_dir(
-  _state: &Arc<IsolateState>,
+  state: &Arc<IsolateState>,
   base: &msg::Base<'_>,
   data: libdeno::deno_buf,
 ) -> Box<Op> {
@@ -1024,6 +1041,10 @@ fn op_read_dir(
   let inner = base.inner_as_read_dir().unwrap();
   let cmd_id = base.cmd_id();
   let path = String::from(inner.path().unwrap());
+
+  if let Err(e) = state.check_read(&path) {
+    return odd_future(e);
+  }
 
   blocking(base.sync(), move || -> OpResult {
     debug!("op_read_dir {}", path);
@@ -1152,14 +1173,19 @@ fn op_symlink(
 }
 
 fn op_read_link(
-  _state: &Arc<IsolateState>,
+  state: &Arc<IsolateState>,
   base: &msg::Base<'_>,
   data: libdeno::deno_buf,
 ) -> Box<Op> {
   assert_eq!(data.len(), 0);
   let inner = base.inner_as_readlink().unwrap();
   let cmd_id = base.cmd_id();
-  let name = PathBuf::from(inner.name().unwrap());
+  let name_ = inner.name().unwrap();
+  let name = PathBuf::from(name_);
+
+  if let Err(e) = state.check_read(&name_) {
+    return odd_future(e);
+  }
 
   blocking(base.sync(), move || -> OpResult {
     debug!("op_read_link {}", name.display());
