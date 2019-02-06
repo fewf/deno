@@ -51,7 +51,7 @@ testPerm({ read: true }, function testFindFilesSkip() {
 
 testPerm({ read: false }, function testFindFilesPerm() {
   let caughtError = false;
-  try{
+  try {
     const files = findFiles([testDir], [".ts", ".md"]);
   } catch (e) {
     caughtError = true;
