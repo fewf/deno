@@ -680,14 +680,24 @@ fn op_open(
     }
   }
 
-  if let Err(e) = state.check_read(&filename_str) {
-    return odd_future(e);
-  }
-
-  if mode != "r" {
-    // Write permission is needed except "r" mode
-    if let Err(e) = state.check_write(&filename_str) {
-      return odd_future(e);
+  match mode {
+    "r" => {
+      if let Err(e) = state.check_read(&filename_str) {
+        return odd_future(e);
+      }
+    }
+    "w" | "a" | "x" => {
+      if let Err(e) = state.check_write(&filename_str) {
+        return odd_future(e);
+      }
+    }
+    &_ => {
+      if let Err(e) = state.check_read(&filename_str) {
+        return odd_future(e);
+      }
+      if let Err(e) = state.check_write(&filename_str) {
+        return odd_future(e);
+      }
     }
   }
 
