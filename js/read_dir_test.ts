@@ -22,12 +22,12 @@ function assertSameContent(files: FileInfo[]) {
   assertEqual(counter, 2);
 }
 
-testPerm({ write: true, read: true }, function readDirSyncSuccess() {
+testPerm({ read: true }, function readDirSyncSuccess() {
   const files = deno.readDirSync("tests/");
   assertSameContent(files);
 });
 
-testPerm({ write: true, read: false }, function readDirSyncPerm() {
+testPerm({ read: false }, function readDirSyncPerm() {
   let caughtError = false;
   try {
     const files = deno.readDirSync("tests/");
@@ -67,12 +67,12 @@ testPerm({ read: true }, function readDirSyncNotFound() {
   assertEqual(src, undefined);
 });
 
-testPerm({ write: true, read: true }, async function readDirSuccess() {
+testPerm({ read: true }, async function readDirSuccess() {
   const files = await deno.readDir("tests/");
   assertSameContent(files);
 });
 
-testPerm({ write: true, read: false }, async function readDirPerm() {
+testPerm({ read: false }, async function readDirPerm() {
   let caughtError = false;
   try {
     const files = await deno.readDir("tests/");
